@@ -1,0 +1,18 @@
+---
+Name: simple-calendar
+Before:
+  - 'mysite/*'
+---
+LeftAndMain:
+  extra_requirements_css:
+    - simple-calendar/css/cms.css
+  extra_requirements_javascript:
+    - simple-calendar/js/cms.js
+CalendarPage:
+  extensions:
+    - Lumberjack
+CalendarEventPage:
+  show_in_sitetree: false
+CalendarPage_Controller:
+  extensions:
+    - CalendarPage_ControllerExtension

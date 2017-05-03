@@ -1,0 +1,16 @@
+.fc-day-grid-event .fc-content {
+  white-space: normal;
+}
+
+a:not([href]) {
+  cursor: default;
+  text-decoration: none;
+}
+
+a:not([href]):hover {
+  color: inherit;
+}
+
+.fc-day-grid-event .fc-time {
+  display: block;
+}

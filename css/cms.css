@@ -1,0 +1,19 @@
+.annoucements-grid .col-StartDate,
+.annoucements-grid .col-EndDate,
+.annoucements-grid .col-StartTime,
+.annoucements-grid .col-EndTime,
+.annoucements-grid .col-AllDay {
+  width: 100px !important; }
+
+.annoucements-grid textarea {
+  height: 32px;
+  position: relative;
+  top: 2px;
+  resize: vertical; }
+
+.annoucements-grid .ss-gridfield-add-new-inline {
+  margin-top: 0.24em !important;
+  margin-bottom: 12px !important; }
+
+li[aria-controls="Root_ChildPages"] + li[aria-controls="Root_ChildPages"] {
+  display: none; }
