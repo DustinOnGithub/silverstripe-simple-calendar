@@ -41,7 +41,7 @@ class CalendarAnnouncement extends DataObject {
   public function validate() {
     $result = parent::validate();
 
-    if(!$this->Title) {
+    if(!$this->Title && $this->CalendarID) {
       $result->error('Bitte geben Sie einen Titel an');
     }
 
