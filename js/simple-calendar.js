@@ -17,7 +17,11 @@ jQuery('document').ready(function() {
         url: window.location.pathname + '/entriesasjson',
         type: 'POST',
         error: function() {
-          alert('Einträge der Queller "entriesasjson" konnten nicht geladen werden');
+          alert('Einträge der Quelle "entriesasjson" konnten nicht geladen werden');
+        },
+        success: function() {
+          ec.emit('reloadListViewEntries');
+          ec.emit('reloadCalendarLegend');
         }
       }
     ],
@@ -45,4 +49,64 @@ jQuery('document').ready(function() {
   }
 
   $('.calendar.calendar--calendar-view').fullCalendar(window.simplecalendarOptions);
+});
+
+// - Event Controller
+var EventController = function() {
+  return {
+    eventListeners: [],
+    on: function(eventName, callback) {
+      this.eventListeners.push({
+        name: eventName,
+        callback: callback
+      });
+    },
+    emit: function(eventName, payload) {
+      this.eventListeners.forEach(function(element, index) {
+        if (element.name == eventName){
+          element['callback'](payload);
+        }
+      })
+    }
+  }
+}
+
+var ec = new EventController();
+
+ec.on('reloadListViewEntries', function(payload) {
+  $.ajax({
+    url: window.location.pathname + '/reloadlistviewentries',
+    context: document.body,
+    type: 'POST',
+    data: {
+      start: $('.calendar--calendar-view').fullCalendar('getView').start.format(),
+      end: $('.calendar--calendar-view').fullCalendar('getView').end.format()
+    },
+    success: function(data) {
+      var outputContainer = $('.calendar-ajax--list-view');
+      outputContainer.html(data);
+    },
+    error: function(request, status, error) {
+      alert('Einträge der Quelle "reloadlistviewentries" konnten nicht geladen werden');
+    }
+  });
+});
+
+ec.on('reloadCalendarLegend', function(payload) {
+  $.ajax({
+    url: window.location.pathname + '/reloadcalendarlegend',
+    context: document.body,
+    type: 'POST',
+    data: {
+      start: $('.calendar--calendar-view').fullCalendar('getView').start.format(),
+      end: $('.calendar--calendar-view').fullCalendar('getView').end.format()
+    },
+    success: function(data) {
+      var outputContainer = $('.calendar-ajax--legend');
+      outputContainer.html(data);
+    },
+    error: function(request, status, error) {
+      alert('Einträge der Quelle "reloadcalendarlegend" konnten nicht geladen werden');
+    }
+  });
 });

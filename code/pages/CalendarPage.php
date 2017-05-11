@@ -128,39 +128,45 @@ class CalendarPage extends Page {
 class CalendarPage_Controller extends Page_Controller {
 
   private static $allowed_actions = [
-    'entriesasjson'
+    'entriesasjson',
+    'reloadlistviewentries',
+    'reloadcalendarlegend',
   ];
 
-  public function CalendarEntries($allEntries = false) {
-    $entries = ArrayList::create();
-    $announcements = $this->Announcements();
-    $events = $this->Children();
-    $eventsAnnouncements = ArrayList::create();
+  public function CalendarEntries($allEntries = false, $reverseOrder = false, $entries = false, $noDateFilter = false) {
+    if(!$entries) {
+      $entries = ArrayList::create();
+      $announcements = $this->Announcements();
+      $events = $this->Children();
+      $eventsAnnouncements = ArrayList::create();
 
-    foreach($events as $event) {
-      foreach($event->Announcements() as $eventAnnouncements) {
-        $eventsAnnouncements->push($eventAnnouncements);
+      foreach ($events as $event) {
+        foreach ($event->Announcements() as $eventAnnouncements) {
+          $eventsAnnouncements->push($eventAnnouncements);
+        }
       }
+
+      $entries->merge($eventsAnnouncements);
+      $entries->merge($announcements);
     }
 
-    $entries->merge($eventsAnnouncements);
-    $entries->merge($announcements);
-
-    if($allEntries) {
+    if($allEntries === true) {
       // ALLE Einträge
       return $entries;
     }
 
-    $entries = $entries->filterByCallback(function($item) {
-      $date = $item->EndDate;
-      if(!$date) {
-        $date = $item->StartDate;
-      }
+    if(!$noDateFilter) {
+      $entries = $entries->filterByCallback(function ($item) {
+        $date = $item->EndDate;
+        if (!$date) {
+          $date = $item->StartDate;
+        }
 
-      if($date >= date('Y-m-d')) {
-        return true;
-      }
-    });
+        if ($date >= date('Y-m-d')) {
+          return true;
+        }
+      });
+    }
 
     $filteredEntries = ArrayList::create();
 
@@ -175,17 +181,29 @@ class CalendarPage_Controller extends Page_Controller {
     }
 
     // Alle noch nicht abgelaufenen Einträge
+    if($reverseOrder) {
+      $filteredEntries = $filteredEntries->sort('StartDate ASC');
+    }
+
     return $filteredEntries;
   }
 
-  public function entriesasjson() {
+  public function entriesasjson($start = false, $end = false, $returnIDs = false) {
     $r = $this->request;
     $v = $r->postVars();
-    $start = $v['start'];
-    $end = $v['end'];
+
+    if($start instanceof SS_HTTPRequest) {
+      $start = $v['start'];
+    }
+
+    if(!$end) {
+      $end = $v['end'];
+    }
+
     $allEntries = $this->CalendarEntries(true);
 
     $data = [];
+    $ids = [];
 
     foreach($allEntries as $entry) {
       if(!($entry->StartDate >= $start && $entry->StartDate <= $end)) {
@@ -223,9 +241,11 @@ class CalendarPage_Controller extends Page_Controller {
 
           if($url) {
             $newData['url'] = $url;
+            $newData['className'] = 'calendar-entry-with-detailpage';
           }
 
           $data[] = $newData;
+          $ids[$entry->ID] = $entry->ID;
 
           $daysI++;
         } while ($daysI < $days);
@@ -259,12 +279,48 @@ class CalendarPage_Controller extends Page_Controller {
         if($entry->EventID) {
           $newData['title'] = $entry->Event()->Title;
           $newData['url'] = $entry->Event()->AbsoluteLink();
+          $newData['className'] = 'calendar-entry-with-detailpage';
         }
 
         $data[] = $newData;
+        $ids[$entry->ID] = $entry->ID;
       }
     }
 
+    if($returnIDs) {
+      return $ids;
+    }
+
     return json_encode($data);
+  }
+
+  public function reloadlistviewentries() {
+    $r = $this->request;
+
+    if($r->isAjax()) {
+      $v = $r->postVars();
+      $start = $v['start'];
+      $end = date('Y-m-d', strtotime('-1 day', strtotime($v['end'])));
+      $entriesIDs = $this->entriesasjson($start, $end, true);
+      $entries = CalendarAnnouncement::get()->byIDs($entriesIDs);
+      $entries = $this->CalendarEntries(false, true, $entries, true);
+
+      return $this->renderWith('CalendarListView', ['CalendarEntries' => $entries, 'AjaxData']);
+    }
+  }
+
+  public function reloadcalendarlegend() {
+    $r = $this->request;
+
+    if($r->isAjax()) {
+      $v = $r->postVars();
+      $start = $v['start'];
+      $end = date('Y-m-d', strtotime('-1 day', strtotime($v['end'])));
+      $entriesIDs = $this->entriesasjson($start, $end, true);
+      $entries = CalendarAnnouncement::get()->byIDs($entriesIDs);
+      $categories = CalendarAnnouncementCategory::get()->byIDs($entries->column('CategoryID'));
+
+      return $this->renderWith('CategoryLegend', ['CurrentCategories' => $categories, 'AjaxData']);
+    }
   }
 }

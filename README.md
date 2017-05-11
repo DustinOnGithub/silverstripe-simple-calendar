@@ -1,6 +1,6 @@
 # silverstripe-calendar
 ## Todo
 - [ ] Add tooltip with announcement description in calendar view
-- [ ] Add announcements in current view under calendar
-- [ ] Add announcement categories from current view under calendar
-- [ ] Implement categories in listview
+- [x] Add announcements from current view as list view under calendar
+- [x] Add announcements categories only from current view under calendar
+- [x] Implement categories in listview
