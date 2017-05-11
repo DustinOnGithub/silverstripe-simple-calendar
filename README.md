@@ -6,3 +6,4 @@
 - [x] Implement categories in listview
 - [ ] Implement callback for week/day switch and reload listview & legend
 - [ ] Add anchor to calendar entries to scroll to listview element
+- [ ] Add default css/scss
