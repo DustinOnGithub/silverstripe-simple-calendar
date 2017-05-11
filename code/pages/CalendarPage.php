@@ -15,6 +15,10 @@ class CalendarPage extends Page {
   private static $has_many = [
     'Announcements' => 'CalendarAnnouncement',
   ];
+  
+  private static $many_many = [
+    'CategoriesToDisplay' => 'CalendarAnnouncementCategory',
+  ];
 
   private static $summary_fields = [
     'Title' => 'Titel',
@@ -35,6 +39,9 @@ class CalendarPage extends Page {
         'agendaWeek' => 'Woche',
         'month' => 'Monat',
       ], 'month'),
+      ListboxField::create('CategoriesToDisplay', 'Termine folgender Kategorien hinzufügen', CalendarAnnouncementCategory::get()->map()->toArray())
+        ->setMultiple(true)
+        ->setDescription('Dadurch werden alle Termine/Ankündigungen der ausgewählten Kategorien in diesem Kalender mit ausgegeben'),
     ], 'Content');
     $fields->insertAfter(Tab::create('Announcements', 'Ankündigungen'), 'Main');
     $fields->addFieldsToTab('Root.Announcements', [
@@ -134,6 +141,8 @@ class CalendarPage_Controller extends Page_Controller {
   ];
 
   public function CalendarEntries($allEntries = false, $reverseOrder = false, $entries = false, $noDateFilter = false) {
+    $categories = $this->CategoriesToDisplay();
+
     if(!$entries) {
       $entries = ArrayList::create();
       $announcements = $this->Announcements();
@@ -148,7 +157,14 @@ class CalendarPage_Controller extends Page_Controller {
 
       $entries->merge($eventsAnnouncements);
       $entries->merge($announcements);
+
+      if($categories->first()) {
+        $extraEntries = CalendarAnnouncement::get()->filter('CategoryID', $categories->column('ID'));
+        $entries->merge($extraEntries);
+      }
+
     }
+
 
     if($allEntries === true) {
       // ALLE Einträge
