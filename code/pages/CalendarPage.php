@@ -310,8 +310,10 @@ class CalendarPage_Controller extends Page_Controller {
     return json_encode($data);
   }
 
-  public function reloadlistviewentries() {
-    $r = $this->request;
+  public function reloadlistviewentries($r = false) {
+    if(!$r) {
+      $r = $this->request;
+    }
 
     if($r->isAjax()) {
       $v = $r->postVars();
@@ -325,8 +327,10 @@ class CalendarPage_Controller extends Page_Controller {
     }
   }
 
-  public function reloadcalendarlegend() {
-    $r = $this->request;
+  public function reloadcalendarlegend($r = false) {
+    if(!$r) {
+      $r = $this->request;
+    }
 
     if($r->isAjax()) {
       $v = $r->postVars();
