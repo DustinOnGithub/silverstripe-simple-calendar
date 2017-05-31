@@ -204,6 +204,11 @@ class CalendarPage_Controller extends Page_Controller {
     return $filteredEntries;
   }
 
+  public function CalendarEntriesForTemplate($entries = false) {
+  	$entries = $this->CalendarEntries(false, true, $entries, false);
+  	return $entries;
+  }
+
   public function entriesasjson($start = false, $end = false, $returnIDs = false) {
     $r = $this->request;
     $v = $r->postVars();
@@ -321,7 +326,7 @@ class CalendarPage_Controller extends Page_Controller {
       $end = date('Y-m-d', strtotime('-1 day', strtotime($v['end'])));
       $entriesIDs = $this->entriesasjson($start, $end, true);
       $entries = CalendarAnnouncement::get()->byIDs($entriesIDs);
-      $entries = $this->CalendarEntries(false, true, $entries, true);
+      $entries = $this->CalendarEntriesForTemplate($entries);
 
       return $this->renderWith('CalendarListView', ['CalendarEntries' => $entries, 'AjaxData']);
     }

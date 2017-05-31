@@ -19,7 +19,7 @@
                   <i class="fa fa-map-marker"></i>$Location
                 </span>
         <% end_if %>
-        <% if $Announcements %>
+        <% if $Announcements.First.Category %>
           <span class="calendar-entry__category">
                 <i class="fa fa-tag"></i><% loop $Announcements %>$Category.Title<% if not $Last %>, <% end_if %><% end_loop %>
               </span>
