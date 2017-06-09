@@ -70,6 +70,14 @@ class CalendarAnnouncement extends DataObject {
     return $result;
   }
 
+  public function onBeforeWrite() {
+    parent::onBeforeWrite();
+
+    if(!$this->EndDate) {
+    	$this->EndDate = $this->StartDate;
+    }
+  }
+
   public function StartDateNice() {
     return $this->dbObject('StartDate')->Format('d.m.Y');
   }
