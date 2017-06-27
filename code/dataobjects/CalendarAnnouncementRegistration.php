@@ -20,7 +20,26 @@ class CalendarAnnouncementRegistration extends DataObject {
     'FirstName' => 'Vorname',
     'Surname' => 'Nachname',
   ];
-  
+
+	public function canCreate($member = null) {
+		$can = Permission::check(['ADMIN', 'CMS_ACCESS_LeftAndMain', 'SITETREE_VIEW_ALL']);
+		return $can;
+	}
+
+	public function canEdit($member = null) {
+		$can = Permission::check(['ADMIN', 'CMS_ACCESS_LeftAndMain', 'SITETREE_VIEW_ALL']);
+		return $can;
+	}
+
+	public function canDelete($member = null) {
+		$can = Permission::check(['ADMIN', 'CMS_ACCESS_LeftAndMain', 'SITETREE_VIEW_ALL']);
+		return $can;
+	}
+
+	public function canView($member = null) {
+		return true;
+	}
+
   public function validate() {
     $result = parent::validate();
 
