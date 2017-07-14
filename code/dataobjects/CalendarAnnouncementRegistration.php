@@ -22,15 +22,18 @@ class CalendarAnnouncementRegistration extends DataObject {
   ];
 
 	public function canCreate($member = null) {
-		return $this->Announcement()->canCreate();
+		$can = Permission::check(['ADMIN', 'CMS_ACCESS_LeftAndMain', 'SITETREE_VIEW_ALL']);
+		return $can;
 	}
 
 	public function canEdit($member = null) {
-		return $this->Announcement()->canEdit();
+		$can = Permission::check(['ADMIN', 'CMS_ACCESS_LeftAndMain', 'SITETREE_VIEW_ALL']);
+		return $can;
 	}
 
 	public function canDelete($member = null) {
-		return $this->Announcement()->canDelete();
+		$can = Permission::check(['ADMIN', 'CMS_ACCESS_LeftAndMain', 'SITETREE_VIEW_ALL']);
+		return $can;
 	}
 
 	public function canView($member = null) {
