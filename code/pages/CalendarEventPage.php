@@ -24,6 +24,21 @@ class CalendarEventPage extends Page {
     'Registrations.Count' => 'Anmeldungen',
   ];
 
+	public function canCreate($member = null) {
+		$can = Permission::check(['ADMIN', 'CMS_ACCESS']);
+		return $can;
+	}
+
+	public function canEdit($member = null) {
+		$can = Permission::check(['ADMIN', 'CMS_ACCESS']);
+		return $can;
+	}
+
+	public function canDelete($member = null) {
+		$can = Permission::check(['ADMIN', 'CMS_ACCESS']);
+		return $can;
+	}
+
   public function getCMSFields() {
     $fields = parent::getCMSFields();
     $fields->addFieldsToTab('Root.Main', [
