@@ -160,7 +160,7 @@ class CalendarEventPage_Controller extends Page_Controller {
 
     $required = RequiredFields::create('Email', 'FirstName', 'Surname', 'Dates');
     $actions = FieldList::create(
-      FormAction::create('doSignUp', 'zum Termin verbindlich Anmelden')
+      FormAction::create('doSignUp', 'verbindlich zu den ausgewählten Terminen anmelden')
     );
 
     $form = Form::create($this, 'SignUp', $fields, $actions, $required);
