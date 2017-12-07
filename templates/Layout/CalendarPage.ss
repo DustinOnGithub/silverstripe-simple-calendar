@@ -1,3 +1,8 @@
+<% if $Content %>
+	<article class="page__text">
+    $Content
+	</article>
+<% end_if %>
 <% if $CalendarEntries %>
   <% if $CalendarView == 'list' %>
     <% include CalendarListView %>
