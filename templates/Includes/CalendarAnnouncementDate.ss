@@ -1,5 +1,5 @@
 <span class="date__day">
-  <% include DateTime %>
+  <% include CalendarDateTime %>
 </span>
 <% if not $AllDay %>
   <span class="date__time">
