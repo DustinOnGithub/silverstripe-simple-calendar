@@ -1,15 +1,1 @@
-<% if $StartDate != $EndDate && $EndDate %>
-  <% if $StartDate.Year == $EndDate.Year %>
-    $StartDate.Format('d.m')
-		-
-    $EndDate.Format('d.m.Y')
-  <% else %>
-    $StartDate.Format('d.m.Y')
-		-
-    $EndDate.Format('d.m.Y')
-  <% end_if %>
-<% else_if $EndDate %>
-  $StartDate.Format('d.m.Y')
-<% else %>
-  $StartDate.Format('d.m.Y')
-<% end_if %>
+<% if $StartDate != $EndDate && $EndDate %><% if $StartDate.Year == $EndDate.Year %>$StartDate.Format('d.m') - $EndDate.Format('d.m.Y')<% else %>$StartDate.Format('d.m.Y') - $EndDate.Format('d.m.Y')<% end_if %><% else_if $EndDate %>$StartDate.Format('d.m.Y')<% else %>$StartDate.Format('d.m.Y')<% end_if %>
