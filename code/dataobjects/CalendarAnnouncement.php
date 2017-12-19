@@ -16,7 +16,7 @@ class CalendarAnnouncement extends DataObject {
   
   private static $has_one = [
     'Calendar' => 'CalendarPage',
-    'Event' => 'CalendarEventPage',
+    'Event' => 'Page',
     'Category' => 'CalendarAnnouncementCategory',
   ];
 
