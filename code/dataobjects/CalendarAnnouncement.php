@@ -35,7 +35,7 @@ class CalendarAnnouncement extends DataObject {
         'Exceptions' => 'CalendarAnnouncementException',
     ];
 
-    private static $default_sort = 'StartDate DESC, EndDate DESC, StartTime DESC, EndTime DESC';
+    private static $default_sort = 'StartDate ASC, EndDate ASC, StartTime ASC, EndTime ASC';
 
     private static $summary_fields = [
         'Title' => 'Titel',
