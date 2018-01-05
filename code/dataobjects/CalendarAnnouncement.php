@@ -136,6 +136,10 @@ class CalendarAnnouncement extends DataObject {
             if($field) {
                 $result->error('Geben Sie im "' . $field . '" einen ganzahligen Wert größer 0 ein!');
             }
+
+            if($this->RecurrenceType == 'weekly' && !$this->RecurrenceNthWeekDays) {
+                $result->error('Bitte wählen Sie mindestens einen Wochentag aus');
+            }
         }
 
         return $result;
