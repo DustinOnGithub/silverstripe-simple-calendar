@@ -1,149 +1,160 @@
 <?php
 class CalendarAnnouncement extends DataObject {
 
-  private static $singular_name = 'Ankündigung';
-  private static $plural_name = 'Ankündigungen';
+    private static $singular_name = 'Ankündigung';
+    private static $plural_name = 'Ankündigungen';
 
-  private static $db = [
-    'Title' => 'Varchar(255)',
-    'Content' => 'Text',
-    'StartDate' => 'Date',
-    'EndDate' => 'Date',
-    'StartTime' => 'Time',
-    'EndTime' => 'Time',
-    'AllDay' => 'Boolean',
-  ];
-  
-  private static $has_one = [
-    'Calendar' => 'CalendarPage',
-    'Event' => 'Page',
-    'Category' => 'CalendarAnnouncementCategory',
-  ];
+    private static $db = [
+        'Title' => 'Varchar(255)',
+        'Content' => 'Text',
+        'StartDate' => 'Date',
+        'EndDate' => 'Date',
+        'StartTime' => 'Time',
+        'EndTime' => 'Time',
+        'AllDay' => 'Boolean',
+        'Recurring' => 'Boolean',
+        'RecurrenceType' => 'Varchar(50)',
+        'RecurrenceNthDay' => 'Int',
+        'RecurrenceNthDayOnStart' => 'Boolean',
+        'RecurrenceNthWeek' => 'Int',
+        'RecurrenceNthWeekDays' => 'Varchar(255)',
+        'RecurrenceNthMonth' => 'Int',
+        'RecurrenceNthYear' => 'Int',
+        'RecurrenceNthMonthDay' => 'Int',
+        'RecurrenceNthMonthDayType' => 'Varchar(50)',
+    ];
 
-  private static $has_many = [
-    'Registrations' => 'CalendarAnnouncementRegistration',
-  ];
+    private static $has_one = [
+        'Calendar' => 'CalendarPage',
+        'Event' => 'Page',
+        'Category' => 'CalendarAnnouncementCategory',
+    ];
 
-  private static $default_sort = 'StartDate DESC, EndDate DESC, StartTime DESC, EndTime DESC';
+    private static $has_many = [
+        'Registrations' => 'CalendarAnnouncementRegistration',
+        'Exceptions' => 'CalendarAnnouncementException',
+    ];
 
-  private static $summary_fields = [
-    'Title' => 'Titel',
-    'Content' => 'Inhalt',
-    'StartDate' => 'Startdatum',
-    'EndDate' => 'Enddatum',
-    'StartTime' => 'Beginn',
-    'EndTime' => 'End',
-    'AllDay.Nice' => 'Ganztags',
-    'Category.Title' => 'Kategorie',
-    'Calendar.MenuTitle' => 'Kalender',
-  ];
+    private static $default_sort = 'StartDate DESC, EndDate DESC, StartTime DESC, EndTime DESC';
 
-	public function canCreate($member = null) {
-		$can = Permission::check(['ADMIN', 'CMS_ACCESS']);
-		return $can;
-	}
+    private static $summary_fields = [
+        'Title' => 'Titel',
+        'Content' => 'Inhalt',
+        'StartDate' => 'Startdatum',
+        'EndDate' => 'Enddatum',
+        'StartTime' => 'Beginn',
+        'EndTime' => 'End',
+        'AllDay.Nice' => 'Ganztags',
+        'Category.Title' => 'Kategorie',
+        'Calendar.MenuTitle' => 'Kalender',
+    ];
 
-	public function canEdit($member = null) {
-		$can = Permission::check(['ADMIN', 'CMS_ACCESS']);
-		return $can;
-	}
-
-	public function canDelete($member = null) {
-		$can = Permission::check(['ADMIN', 'CMS_ACCESS']);
-		return $can;
-	}
-
-	public function canView($member = null) {
-		return true;
-	}
-
-  public function validate() {
-    $result = parent::validate();
-
-    if(!$this->Title && $this->CalendarID) {
-      $result->error('Bitte geben Sie einen Titel an');
+    public function canCreate($member = null) {
+        $can = Permission::check(['ADMIN', 'CMS_ACCESS']);
+        return $can;
     }
 
-    if(!$this->CategoryID) {
-      $result->error('Bitte wählen Sie eine Kategorie aus');
+    public function canEdit($member = null) {
+        $can = Permission::check(['ADMIN', 'CMS_ACCESS']);
+        return $can;
     }
 
-    if(!$this->StartDate) {
-      $result->error('Bitte geben Sie ein Startdatum an');
+    public function canDelete($member = null) {
+        $can = Permission::check(['ADMIN', 'CMS_ACCESS']);
+        return $can;
     }
 
-    if($this->EndDate && $this->EndDate < $this->StartDate) {
-      $result->error('Das Enddatum muss nach dem Startdatum liegen');
+    public function canView($member = null) {
+        return true;
     }
 
-    if(!$this->StartTime) {
-      if(!$this->AllDay) {
-        $result->error('Bitte geben Sie einen Zeitraum an. Beginn/Ende oder Ganztags');
-      }
+    public function validate() {
+        $result = parent::validate();
+
+        if(!$this->Title && $this->CalendarID) {
+            $result->error('Bitte geben Sie einen Titel an');
+        }
+
+        if(!$this->CategoryID) {
+            $result->error('Bitte wählen Sie eine Kategorie aus');
+        }
+
+        if(!$this->StartDate) {
+            $result->error('Bitte geben Sie ein Startdatum an');
+        }
+
+        if($this->EndDate && $this->EndDate < $this->StartDate) {
+            $result->error('Das Enddatum muss nach dem Startdatum liegen');
+        }
+
+        if(!$this->StartTime) {
+            if(!$this->AllDay) {
+                $result->error('Bitte geben Sie einen Zeitraum an. Beginn/Ende oder Ganztags');
+            }
+        }
+
+        if($this->EndTime && $this->EndTime < $this->StartTime) {
+            $result->error('Das Ende muss nach dem Start liegen');
+        }
+
+        return $result;
     }
 
-    if($this->EndTime && $this->EndTime < $this->StartTime) {
-      $result->error('Das Ende muss nach dem Start liegen');
+    public function onBeforeWrite() {
+        parent::onBeforeWrite();
+
+        if(!$this->EndDate) {
+            $this->EndDate = $this->StartDate;
+        }
     }
 
-    return $result;
-  }
-
-  public function onBeforeWrite() {
-    parent::onBeforeWrite();
-
-    if(!$this->EndDate) {
-    	$this->EndDate = $this->StartDate;
-    }
-  }
-
-  public function StartDateNice() {
-    return $this->dbObject('StartDate')->Format('d.m.Y');
-  }
-
-  public function DateRange() {
-    $range = $this->StartDateNice();
-
-    if($this->EndDate && $this->StartDate != $this->EndDate) {
-      $range .= ' - ' . $this->dbObject('EndDate')->Format('d.m.Y');
+    public function StartDateNice() {
+        return $this->dbObject('StartDate')->Format('d.m.Y');
     }
 
-    if(!$this->AllDay && $this->StartTime) {
-      $range .= ' (' . $this->dbObject('StartTime')->Format('H:i');
+    public function DateRange() {
+        $range = $this->StartDateNice();
 
-      if($this->EndTime) {
-        $range .= ' - ' . $this->dbObject('EndTime')->Format('H:i');
-      }
+        if($this->EndDate && $this->StartDate != $this->EndDate) {
+            $range .= ' - ' . $this->dbObject('EndDate')->Format('d.m.Y');
+        }
 
-      $range .= ' Uhr)';
+        if(!$this->AllDay && $this->StartTime) {
+            $range .= ' (' . $this->dbObject('StartTime')->Format('H:i');
+
+            if($this->EndTime) {
+                $range .= ' - ' . $this->dbObject('EndTime')->Format('H:i');
+            }
+
+            $range .= ' Uhr)';
+        }
+
+        return $range;
     }
 
-    return $range;
-  }
+    public function getCMSFields() {
+        $fields = FieldList::create(
+            TabSet::create('Root',
+                Tab::create('Main', 'Hauptteil',
+                    TextField::create('Title', 'Titel'),
+                    TextareaField::create('Content', 'Inhalt'),
+                    DateField::create('StartDate', 'Startdatum'),
+                    DateField::create('EndDate', 'Enddatum'),
+                    TimeField::create('StartTime', 'Beginn'),
+                    TimeField::create('EndTime', 'Ende'),
+                    DropdownField::create('AllDay', 'Ganztags', [1 => 'Ja', 0 => 'Nein'], 0),
+                    DropdownField::create('CategoryID', 'Kategorie', CalendarAnnouncementCategory::get()->map('ID', 'Title')->toArray())
+                        ->setEmptyString('(Bitte auswählen)'),
+                    DropdownField::create('CalendarID', 'Kalender', CalendarPage::get()->map('ID', 'MenuTitle')->toArray())
+                        ->setEmptyString('(Bitte auswählen)'),
+                    DropdownField::create('EventID', 'Veranstaltung', CalendarEventPage::get()->map('ID', 'MenuTitle')->toArray())
+                        ->setEmptyString('(Bitte auswählen)')
+                )
+            )
+        );
 
-  public function getCMSFields() {
-    $fields = FieldList::create(
-      TabSet::create('Root',
-        Tab::create('Main', 'Hauptteil',
-          TextField::create('Title', 'Titel'),
-          TextareaField::create('Content', 'Inhalt'),
-          DateField::create('StartDate', 'Startdatum'),
-          DateField::create('EndDate', 'Enddatum'),
-          TimeField::create('StartTime', 'Beginn'),
-          TimeField::create('EndTime', 'Ende'),
-          DropdownField::create('AllDay', 'Ganztags', [1 => 'Ja', 0 => 'Nein'], 0),
-          DropdownField::create('CategoryID', 'Kategorie', CalendarAnnouncementCategory::get()->map('ID', 'Title')->toArray())
-            ->setEmptyString('(Bitte auswählen)'),
-          DropdownField::create('CalendarID', 'Kalender', CalendarPage::get()->map('ID', 'MenuTitle')->toArray())
-            ->setEmptyString('(Bitte auswählen)'),
-          DropdownField::create('EventID', 'Veranstaltung', CalendarEventPage::get()->map('ID', 'MenuTitle')->toArray())
-            ->setEmptyString('(Bitte auswählen)')
-        )
-      )
-    );
+        $this->extend('updateCMSFields', $fields);
 
-    $this->extend('updateCMSFields', $fields);
-
-    return $fields;
-  }
+        return $fields;
+    }
 }
