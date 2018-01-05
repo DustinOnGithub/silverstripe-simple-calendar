@@ -48,7 +48,7 @@ class CalendarEventPage extends Page {
     $fields->insertAfter(Tab::create('Announcements', 'Termine'), 'Main');
     $fields->addFieldsToTab('Root.Announcements', [
       DropdownField::create('EnableSignUp', 'Anmeldung erlauben', [1 => 'Ja', 0 => 'Nein'], 1),
-      GridField::create('Announcements', 'Termine', $this->Announcements(), $gridConf = GridConfig::create())
+      GridField::create('Announcements', 'Termine', $this->Announcements(), $gridConf = CalendarGridConfig::create())
     ]);
 
     $gridConf->set([
@@ -94,7 +94,7 @@ class CalendarEventPage extends Page {
 
     $fields->insertAfter(Tab::create('Registrations', 'Anmeldungen'), 'Announcements');
     $fields->addFieldsToTab('Root.Registrations', [
-      GridField::create('Registrations', 'Anmeldungen', $this->Registrations(), $gridConf = GridConfig::create())
+      GridField::create('Registrations', 'Anmeldungen', $this->Registrations(), $gridConf = CalendarGridConfig::create())
         ->setDescription('<br>Bitte verwenden Sie die Termin-ID zum filtern. Diese finden Sie im Tab "Termine" beim jeweiligen Eintrag')
     ]);
 

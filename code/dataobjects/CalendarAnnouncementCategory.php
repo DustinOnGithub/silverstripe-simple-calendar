@@ -63,10 +63,10 @@ class CalendarAnnouncementCategory extends DataObject {
                 Tab::create('Main', 'Hauptteil',
                     TextField::create('Title', 'Titel'),
                     ColourPicker::create('Color', 'Farbe'),
-                    ColourPicker::create('FontColor', 'Schriftfarbe')
+                    ColourPicker::create('FontColor', 'Schriftfarbe'),
+                    GridField::create('Exceptions', 'Ausnahmen', $this->Exceptions(), $exceptionGC = CalendarGridConfig::create())
                 )
-            ),
-            GridField::create('Exceptions', 'Ausnahmen', $this->Exceptions(), $exceptionGC = GridConfig::create())
+            )
         );
 
         $exceptionGC->set([

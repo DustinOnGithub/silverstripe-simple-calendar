@@ -1,5 +1,5 @@
 <?php
-class GridConfig extends GridFieldConfig {
+class CalendarGridConfig extends GridFieldConfig {
 
   public function __construct($itemsPerPage = 30, $sortField = false) {
     parent::__construct();
@@ -33,7 +33,7 @@ class GridConfig extends GridFieldConfig {
   // - Note that cou can combine relation and multi but not inline with relation and/or multi
   // - --------------------------------------------------------------------------------------
   //
-  //  GridField::create('Relation', 'Title', $this->Relation(), $conf = GridConfig::create())
+  //  GridField::create('Relation', 'Title', $this->Relation(), $conf = CalendarGridConfig::create())
   //
   //  $conf->set([
   //    'relation',

@@ -45,19 +45,20 @@ class CalendarPage extends Page {
         ], 'Content');
         $fields->insertAfter(Tab::create('Announcements', 'Ankündigungen'), 'Main');
         $fields->addFieldsToTab('Root.Announcements', [
-            GridField::create('Announcements', 'Alle Ankündigungen', $this->Announcements(), $gridConf = GridConfig::create())
+            GridField::create('Announcements', 'Alle Ankündigungen', $this->Announcements(), $gridConf = CalendarGridConfig::create())
                 ->addExtraClass('annoucements-grid')
                 ->setDescription('<br>Ankündigungen sind "Termine" ohne eigene Seite. z.B. Betriebsurlaub oder Geburtstage')
         ]);
 
         $fields->insertAfter(Tab::create('Categories', 'Kategorien'), 'Announcements');
         $fields->addFieldsToTab('Root.Categories', [
-            GridField::create('Categories', 'Kategorien', CalendarAnnouncementCategory::get(), $calAnnCatConf = GridConfig::create())
+            GridField::create('Categories', 'Kategorien', CalendarAnnouncementCategory::get(), $calAnnCatConf = CalendarGridConfig::create())
                 ->addExtraClass('calendarannoucementscategory-grid')
         ]);
 
         $calAnnCatConf->set([
             'inline' => [
+                'edit',
                 'fields' => [
                     'Title' => [
                         'title' => 'Titel',
@@ -77,6 +78,7 @@ class CalendarPage extends Page {
 
         $gridConf->set([
             'inline' => [
+                'edit',
                 'fields' => [
                     'Title' => [
                         'title' => 'Titel',

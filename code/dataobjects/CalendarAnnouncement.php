@@ -49,6 +49,14 @@ class CalendarAnnouncement extends DataObject {
         'Calendar.MenuTitle' => 'Kalender',
     ];
 
+    private $startDateTimestamp = -1;
+    private $endDateTimestamp = -1;
+    private $dailyRpTxt = 'Alle x Tage';
+    private $weeklyRpTxt = 'Alle x Wochen';
+    private $monthlyRpTxt = 'Alle x Monate';
+    private $yearlyRpTxt = 'Alle x Jahre';
+    private $dayInSeconds = 86400;
+
     public function canCreate($member = null) {
         $can = Permission::check(['ADMIN', 'CMS_ACCESS']);
         return $can;
@@ -675,7 +683,7 @@ class CalendarAnnouncement extends DataObject {
                     ),
                     $nthYear = NumericField::create('RecurrenceNthYear', $this->yearlyRpTxt),
                     $exception = DisplayLogicWrapper::create(
-                        GridField::create('Exceptions', 'Ausnahmen', $this->Exceptions(), $exceptionGC = GridConfig::create())
+                        GridField::create('Exceptions', 'Ausnahmen', $this->Exceptions(), $exceptionGC = CalendarGridConfig::create())
                     )
                 )
             )
