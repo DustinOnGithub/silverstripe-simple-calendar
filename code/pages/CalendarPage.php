@@ -112,6 +112,10 @@ class CalendarPage extends Page {
                             return DropdownField::create($column, 'Kategorie', CalendarAnnouncementCategory::get()->map()->toArray());
                         },
                     ],
+                    'Recurring.Nice' => [
+                        'title' => 'Wiederholung',
+                        'field' => 'ReadonlyField',
+                    ],
                 ],
             ],
         ]);
@@ -163,7 +167,6 @@ class CalendarPage_Controller extends Page_Controller {
                 $extraEntries = CalendarAnnouncement::get()->filter('CategoryID', $categories->column('ID'));
                 $entries->merge($extraEntries);
             }
-
         }
 
 
@@ -210,110 +213,122 @@ class CalendarPage_Controller extends Page_Controller {
         return $entries;
     }
 
-    public function entriesasjson($start = false, $end = false, $returnIDs = false) {
+    public function entriesasjson($startDate = false, $endDate = false, $returnIDs = false) {
         $r = $this->request;
         $v = $r->postVars();
 
-        if($start instanceof SS_HTTPRequest) {
-            $start = $v['start'];
+        if($startDate instanceof SS_HTTPRequest) {
+            $startDate = $v['start'];
         }
 
-        if(!$end) {
-            $end = $v['end'];
+        if(!$endDate) {
+            $endDate = $v['end'];
         }
 
         $allEntries = $this->CalendarEntries(true);
+        $allEntries = CalendarAnnouncement::get()->byIDs($allEntries->column('ID'));
+
+        $noRecurringEntriesInThisTimeWindow = $allEntries->filter([
+            'StartDate:GreaterThanOrEqual' => $startDate,
+            'EndDate:LessThanOrEqual' => $endDate,
+        ]);
+
+        $recurringEntries = $allEntries->filter([
+            'Recurring' => true,
+            'StartDate:LessThanOrEqual' => $endDate,
+        ]);
+
+        $recurringEntriesInThisWindow = [];
+
+        function addArrayToArray($a, $b) {
+            $key = count($a);
+
+            foreach($b as $item) {
+                $a[$key++] = $item;
+            }
+
+            return $a;
+        }
+
+        foreach($recurringEntries as $recurringEntry) {
+            $recurringEntriesInThisWindow = addArrayToArray(
+                $recurringEntriesInThisWindow,
+                $recurringEntry->generateRecurrentEntries($startDate, $endDate)
+            );
+        }
+
+        $entriesInThisWindow = addArrayToArray($recurringEntriesInThisWindow, $noRecurringEntriesInThisTimeWindow->toArray());
+        $returnEntries = $this->parseEntriesToDataArray($entriesInThisWindow, $returnIDs);
+
+        if($returnIDs === true) {
+            return $returnEntries;
+        } else {
+            return json_encode ($returnEntries);
+        }
+    }
+
+    /**
+     * @param array $entries CalenderAnnouncement objects
+     * @param boolean $returnIDs true -> returns id's of $entries objects
+     * @throws InvalidArgumentException
+     * @return array
+     */
+    private function parseEntriesToDataArray($entries, $returnIDs = false) {
+        if(!is_array($entries)) {
+            throw new InvalidArgumentException('type of $entries is not array');
+        }
 
         $data = [];
         $ids = [];
+        $key = 0;
 
-        foreach($allEntries as $entry) {
-            if(!($entry->StartDate >= $start && $entry->StartDate <= $end)) {
+        foreach($entries as $entry) {
+            if($entry == null || !($entry instanceof CalendarAnnouncement)){
                 continue;
             }
 
-            if(!$entry->AllDay && $entry->StartDate != $entry->EndDate && $entry->StartTime != $entry->EndTime && $entry->StartDate && $entry->EndDate) {
-                $days = (strtotime($entry->EndDate) - strtotime($entry->StartDate)) / (60 * 60 * 24) + 1;
-                $daysI = 0;
-
-                if($entry->EventID) {
-                    $title = $entry->Event()->Title;
-                    $url = $entry->Event()->AbsoluteLink();
-                } else {
-                    $title = $entry->Title;
-                    $url = false;
-                }
-
-                do {
-                    $newDate = date('Y-m-d', strtotime("$entry->StartDate +$daysI days"));
-
-                    $newData = [
-                        'id' => $entry->ID + $daysI + 20,
-                        'title' => $title,
-                        'start' => $newDate . ' ' . $entry->StartTime,
-                        'end' => $newDate . ' ' . $entry->EndTime,
-                        'color' => 'yellow',
-                        'textColor' => 'black',
-                    ];
-
-                    if($entry->CategoryID) {
-                        $newData['color'] = $entry->Category()->Color;
-                        $newData['textColor'] = $entry->Category()->FontColor;
-                    }
-
-                    if($url) {
-                        $newData['url'] = $url;
-                        $newData['className'] = 'calendar-entry-with-detailpage';
-                    }
-
-                    $data[] = $newData;
-                    $ids[$entry->ID] = $entry->ID;
-
-                    $daysI++;
-                } while ($daysI < $days);
-            } else {
-                $newData = [
-                    'id' => $entry->ID,
-                    'title' => $entry->Title,
-                    'allDay' => $entry->AllDay,
-                    'color' => 'yellow',
-                    'textColor' => 'black',
-                ];
-
-                if($entry->CategoryID) {
-                    $newData['color'] = $entry->Category()->Color;
-                    $newData['textColor'] = $entry->Category()->FontColor;
-                }
-
-                $startTime = $entry->StartTime;
-                if(!$startTime) {
-                    $startTime = '00:00:00';
-                }
-
-                $newData['start'] = $entry->StartDate . ' ' . $startTime;
-
-                if(!$entry->EndDate) {
-                    $newData['end'] = $entry->StartDate . ' ' . $entry->EndTime;
-                } else {
-                    $newData['end'] = $entry->EndDate . ' ' . $entry->EndTime;
-                }
-
-                if($entry->EventID) {
-                    $newData['title'] = $entry->Event()->Title;
-                    $newData['url'] = $entry->Event()->AbsoluteLink();
-                    $newData['className'] = 'calendar-entry-with-detailpage';
-                }
-
-                $data[] = $newData;
+            if($returnIDs === true) {
                 $ids[$entry->ID] = $entry->ID;
+                continue;
+            }
+
+            $generatedEntries = $entry->cutExceptions();
+
+            foreach($generatedEntries as $generatedEntry) {
+                $data[$key++] = $this->entryToDataArray($generatedEntry);
             }
         }
 
-        if($returnIDs) {
+        if($returnIDs === true) {
             return $ids;
         }
 
-        return json_encode($data);
+        return $data;
+    }
+
+    /** generates a data array for the frontend
+     * @param CalendarAnnouncement $entry
+     * @return array
+     */
+    private function entryToDataArray($entry) {
+        $data = [
+            'id' => $entry->ID,
+            'title' => $entry->Title,
+            'allDay' => $entry->AllDay,
+        ];
+
+        if($entry->AllDay == 0) {
+            $data['start'] = $entry->StartDate . ' ' . $entry->StartTime;
+            $data['end'] = $entry->EndDate . ' ' . $entry->EndTime;
+        } else {
+            $data['start'] = $entry->StartDate;
+            $data['end'] = $entry->EndDate;
+        } if($entry->CategoryID) {
+            $data['color'] = $entry->Category()->Color;
+            $data['textColor'] = $entry->Category()->FontColor;
+        }
+
+        return $data;
     }
 
     public function reloadlistviewentries($r = false) {
@@ -326,10 +341,13 @@ class CalendarPage_Controller extends Page_Controller {
             $start = $v['start'];
             $end = date('Y-m-d', strtotime('-1 day', strtotime($v['end'])));
             $entriesIDs = $this->entriesasjson($start, $end, true);
-            $entries = CalendarAnnouncement::get()->byIDs($entriesIDs);
-            $entries = $this->CalendarEntriesForTemplate($entries);
 
-            return $this->renderWith('CalendarListView', ['CalendarEntries' => $entries, 'AjaxData']);
+            if($entriesIDs != null) {
+                $entries = CalendarAnnouncement::get()->byIDs($entriesIDs);
+                $entries = $this->CalendarEntries(false, true, $entries, true);
+
+                return $this->renderWith('CalendarListView', ['CalendarEntries' => $entries, 'AjaxData']);
+            }
         }
     }
 
@@ -343,10 +361,13 @@ class CalendarPage_Controller extends Page_Controller {
             $start = $v['start'];
             $end = date('Y-m-d', strtotime('-1 day', strtotime($v['end'])));
             $entriesIDs = $this->entriesasjson($start, $end, true);
-            $entries = CalendarAnnouncement::get()->byIDs($entriesIDs);
-            $categories = CalendarAnnouncementCategory::get()->byIDs($entries->column('CategoryID'));
 
-            return $this->renderWith('CategoryLegend', ['CurrentCategories' => $categories, 'AjaxData']);
+            if($entriesIDs != null) {
+                $entries = CalendarAnnouncement::get()->byIDs($entriesIDs);
+                $categories = CalendarAnnouncementCategory::get()->byIDs($entries->column('CategoryID'));
+
+                return $this->renderWith('CategoryLegend', ['CurrentCategories' => $categories, 'AjaxData']);
+            }
         }
     }
 
