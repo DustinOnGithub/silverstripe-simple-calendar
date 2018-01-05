@@ -21,7 +21,7 @@
         <% end_if %>
         <% if $Announcements.First.Category %>
           <span class="calendar-entry__category">
-                <i class="fa fa-tag"></i><% loop $Announcements %>$Category.Title<% if not $Last %>, <% end_if %><% end_loop %>
+                <i class="fa fa-tag"></i><% loop $UniqueAnnouncementCategories %>$Title<% if not $Last %>, <% end_if %><% end_loop %>
               </span>
         <% end_if %>
         <% if $Content %>
