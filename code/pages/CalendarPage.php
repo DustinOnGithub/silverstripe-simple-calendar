@@ -313,10 +313,19 @@ class CalendarPage_Controller extends Page_Controller {
      * @return array
      */
     private function entryToDataArray($entry) {
+        if($entry->EventID) {
+            $title = $entry->Event()->MenuTitle;
+            $url = $entry->Event()->AbsoluteLink();
+        } else {
+            $title = $entry->Title;
+            $url = false;
+        }
+
         $data = [
             'id' => $entry->ID,
-            'title' => $entry->Title,
+            'title' => $title,
             'allDay' => $entry->AllDay,
+            'url' => $url,
         ];
 
         if($entry->AllDay == 0) {
